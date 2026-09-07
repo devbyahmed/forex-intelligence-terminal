@@ -1,0 +1,31 @@
+{
+  "name": "@forex-agent/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint src",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@forex-agent/contracts": "workspace:*",
+    "@forex-agent/core": "workspace:*",
+    "next": "^15.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "@forex-agent/db": "workspace:*",
+    "@forex-agent/worker": "workspace:*",
+    "@forex-agent/auth": "workspace:*",
+    "@forex-agent/config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "typescript": "^5.9.2",
+    "@playwright/test": "^1.56.0"
+  }
+}

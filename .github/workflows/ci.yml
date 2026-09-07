@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      # Integration tests run against real Postgres, never a mock — the schema
+      # constraints are part of the logic under test.
+      postgres:
+        # Pinned to the production major. A CI database a major version behind
+        # tests different constraint and function behaviour than the one that will
+        # reject the write, which makes a green build weaker evidence than it looks.
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: forex_agent_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/forex_agent_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the runtime this deploys onto. A build that passes on 22 and
+          # runs on 24 is a build verified somewhere other than where it matters.
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Tests
+        run: pnpm test
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so the scan covers every commit, not just the tip.
+          fetch-depth: 0
+
+      # A public repository makes a committed secret irreversible the moment it is
+      # pushed. These two checks are the guard, and they must fail the build.
+      - name: Fail on any tracked env file other than .env.example
+        run: |
+          set -euo pipefail
+          tracked="$(git ls-files | grep -E '(^|/)\.env' | grep -v '^\.env\.example$' || true)"
+          if [ -n "$tracked" ]; then
+            echo "::error::Env files must never be committed. Found:"
+            echo "$tracked"
+            exit 1
+          fi
+          echo "OK: .env.example is the only tracked env file."
+
+      - name: Scan history for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

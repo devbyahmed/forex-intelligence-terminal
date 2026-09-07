@@ -1,0 +1,7 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+
+# esbuild (used by vitest) needs its postinstall step to produce a working binary.
+onlyBuiltDependencies:
+  - esbuild

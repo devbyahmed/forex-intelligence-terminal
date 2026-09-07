@@ -1,0 +1,35 @@
+{
+  "name": "forex-agent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI Trading Intelligence Terminal — private, evidence-based market research. Not a trading bot.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@10.34.5",
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "db:create": "node scripts/db-create.mjs",
+    "db:create:test": "node scripts/db-create.mjs --test",
+    "user": "node scripts/user-admin.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^22.15.3",
+    "drizzle-orm": "^0.44.6",
+    "eslint": "^9.39.1",
+    "eslint-plugin-import": "^2.32.0",
+    "pg": "^8.16.3",
+    "turbo": "^2.5.8",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.2",
+    "vitest": "^3.2.4"
+  }
+}

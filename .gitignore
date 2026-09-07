@@ -1,0 +1,26 @@
+node_modules/
+dist/
+.next/
+out/
+*.tsbuildinfo
+coverage/
+.turbo/
+
+# Secrets — never commit. See SECURITY.md.
+.env
+.env.*
+!.env.example
+
+# Local data
+pgdata/
+*.log
+.DS_Store
+Thumbs.db
+
+# Checkpoint transcripts are generated artefacts, not source.
+checkpoint-*.txt
+
+# Next.js build output and Playwright artefacts.
+.next/
+apps/web/test-results/
+apps/web/playwright-report/

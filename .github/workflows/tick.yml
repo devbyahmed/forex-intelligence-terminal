@@ -1,0 +1,70 @@
+name: Scheduled tick
+
+# The scheduler. GitHub Actions cron is free for public repositories and is the only
+# free scheduler this project could find that does not sleep the way a free web host
+# does — see LIMITS.md.
+#
+# Two properties of GitHub's cron shape this workflow, and both are documented rather
+# than worked around:
+#
+#  1. **It is at-least-once, and late.** Scheduled runs are queued on shared
+#     infrastructure and can be delayed by minutes, occasionally dropped entirely. So
+#     nothing here assumes a run happens at the stated minute, and every job claims its
+#     slot through a unique key — a delayed or duplicated delivery costs nothing.
+#  2. **It stops on an inactive repository.** GitHub disables scheduled workflows after
+#     60 days without a commit. That is a real failure mode for a finished project, and
+#     the data-failure alert is what notices it: an ingestion gap raises an email even
+#     when the cause is that nothing is running at all.
+#
+# The 15-minute cadence is the tick, not the job cadence. Each job decides its own
+# interval; this only offers them the opportunity.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  # So a deploy can be verified immediately rather than at the top of the next quarter.
+  workflow_dispatch:
+
+concurrency:
+  # A late run must not overlap the next one. Advisory locks would catch it, but not
+  # starting is cheaper than starting and being refused.
+  group: scheduled-tick
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Trigger the tick
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          JOB_TRIGGER_SECRET: ${{ secrets.JOB_TRIGGER_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${APP_BASE_URL}" ] || [ -z "${JOB_TRIGGER_SECRET}" ]; then
+            echo "APP_BASE_URL and JOB_TRIGGER_SECRET must both be set as repository secrets." >&2
+            exit 1
+          fi
+
+          # --fail-with-body so a non-2xx both fails the step and shows what came back.
+          # The endpoint never returns a useful error body by design, but the status code
+          # distinguishes "rejected the secret" from "ran and something broke".
+          http_status=$(curl \
+            --silent --show-error --fail-with-body \
+            --max-time 300 \
+            --write-out '%{http_code}' \
+            --output /tmp/tick-response.json \
+            -X POST \
+            -H "Authorization: Bearer ${JOB_TRIGGER_SECRET}" \
+            "${APP_BASE_URL%/}/api/jobs/tick") || {
+              echo "Tick request failed. Response body:" >&2
+              cat /tmp/tick-response.json >&2 || true
+              exit 1
+            }
+
+          echo "HTTP ${http_status}"
+          # The response lists what ran, so the Actions log is a schedule history.
+          cat /tmp/tick-response.json

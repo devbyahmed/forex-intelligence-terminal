@@ -1,0 +1,33 @@
+{
+  "name": "@forex-agent/providers",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@forex-agent/config": "workspace:*",
+    "@forex-agent/core": "workspace:*",
+    "@forex-agent/db": "workspace:*",
+    "drizzle-orm": "^0.44.6",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@forex-agent/testing": "workspace:*",
+    "typescript": "^5.9.3"
+  }
+}
