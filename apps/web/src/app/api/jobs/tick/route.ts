@@ -18,7 +18,7 @@
 
 import { NextResponse } from 'next/server';
 import { getEnv } from '@forex-agent/config';
-import { buildTick, handleHttpTrigger } from '@forex-agent/worker';
+import { buildTick, handleHttpTrigger, secretMatches } from '@forex-agent/worker';
 import { openDb } from '../../../../lib/session';
 import { logger } from '../../../../lib/logger';
 
@@ -39,6 +39,19 @@ export async function POST(request: Request): Promise<NextResponse> {
   // trigger; splitting it here only separates the scheme from the value.
   const header = request.headers.get('authorization') ?? '';
   const secret = header.startsWith('Bearer ') ? header.slice('Bearer '.length) : undefined;
+
+  /*
+   * Authenticate before composing anything.
+   *
+   * `handleHttpTrigger` checks the secret too, but it can only do so after it has been
+   * handed a database and a job list — and building those is the expensive part. An
+   * unauthenticated caller was opening a Neon connection and constructing every
+   * provider client, and any failure in that work surfaced as a 500 when the correct
+   * answer was 401. Production returned exactly that on the first wrong-secret probe.
+   */
+  if (!secretMatches(secret, expectedSecret)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const handle = openDb();
   try {

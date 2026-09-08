@@ -75,7 +75,16 @@ export async function handleHttpTrigger(
   }
 }
 
-function secretMatches(provided: string | undefined, expected: string): boolean {
+/**
+ * Does the presented secret match?
+ *
+ * Exported so a caller can decide *before* doing anything expensive. The endpoint is
+ * public: composing providers and opening a database connection ahead of this check
+ * lets an unauthenticated caller spend compute, and it turns every composition error
+ * into a 500 where the honest answer was 401. `handleHttpTrigger` checks again — one
+ * definition of the rule, applied twice, rather than two definitions.
+ */
+export function secretMatches(provided: string | undefined, expected: string): boolean {
   if (provided === undefined || provided === '' || expected === '') return false;
   const a = Buffer.from(provided, 'utf8');
   const b = Buffer.from(expected, 'utf8');
