@@ -45,17 +45,16 @@ const config = {
    * does not follow it out of the app directory.
    *
    * `outputFileTracingRoot` tells the tracer the deployable unit is the whole
-   * workspace rather than `apps/web`. The include is belt and braces: it names the
-   * platform binaries explicitly, so a tracer that misses the symlink again still
-   * ships the file instead of failing on the first request.
+   * workspace rather than `apps/web`, which is what makes the addon reachable.
+   *
+   * An `outputFileTracingIncludes` entry naming the binaries explicitly was tried
+   * as belt and braces and had to be removed: those globs resolve through
+   * `.pnpm/<pkg>/node_modules/@node-rs/argon2`, which is itself a symlink, and
+   * Vercel rejects the whole deployment with "the framework produced an invalid
+   * deployment package" when a function contains symlinked directories. The build
+   * succeeds and the deploy fails, which is a slower way to learn it.
    */
   outputFileTracingRoot: repoRoot,
-  outputFileTracingIncludes: {
-    '/**': [
-      '../../node_modules/.pnpm/@node-rs+argon2*/node_modules/@node-rs/**',
-      '../../node_modules/@node-rs/**',
-    ],
-  },
 
   /**
    * Leave native addons to Node's own resolver.
