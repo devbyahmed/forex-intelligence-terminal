@@ -5,6 +5,11 @@
  * compiled to ESM, and Next needs to process them rather than treating them as
  * prebuilt node_modules.
  */
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
@@ -28,6 +33,29 @@ const config = {
     '@forex-agent/worker',
   ],
   eslint: { ignoreDuringBuilds: true },
+
+  /**
+   * ── Getting the native addon into the deployed function ──────────────────
+   *
+   * `serverExternalPackages` keeps `@node-rs/argon2` out of the bundle, which is
+   * correct — but external means "require it at runtime", and that only works if the
+   * file is actually there. It was not: every server route on Vercel failed with
+   * `Cannot find module @node-rs/argon2` while the local build was fine, because the
+   * addon is reached through a pnpm symlink from @forex-agent/auth and the tracer
+   * does not follow it out of the app directory.
+   *
+   * `outputFileTracingRoot` tells the tracer the deployable unit is the whole
+   * workspace rather than `apps/web`. The include is belt and braces: it names the
+   * platform binaries explicitly, so a tracer that misses the symlink again still
+   * ships the file instead of failing on the first request.
+   */
+  outputFileTracingRoot: repoRoot,
+  outputFileTracingIncludes: {
+    '/**': [
+      '../../node_modules/.pnpm/@node-rs+argon2*/node_modules/@node-rs/**',
+      '../../node_modules/@node-rs/**',
+    ],
+  },
 
   /**
    * Leave native addons to Node's own resolver.

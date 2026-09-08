@@ -59,6 +59,9 @@ importers:
       '@forex-agent/worker':
         specifier: workspace:*
         version: link:../../packages/worker
+      '@node-rs/argon2':
+        specifier: ^2.0.2
+        version: 2.2.0
       next:
         specifier: ^15.5.4
         version: 15.5.25(@playwright/test@1.63.0)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

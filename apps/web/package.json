@@ -20,7 +20,8 @@
     "@forex-agent/db": "workspace:*",
     "@forex-agent/worker": "workspace:*",
     "@forex-agent/auth": "workspace:*",
-    "@forex-agent/config": "workspace:*"
+    "@forex-agent/config": "workspace:*",
+    "@node-rs/argon2": "^2.0.2"
   },
   "devDependencies": {
     "@types/react": "^19.1.9",
