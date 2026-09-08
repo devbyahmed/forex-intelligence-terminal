@@ -57,11 +57,27 @@ export interface DbHandle {
 
 let wsConfigured = false;
 
+/**
+ * Give the Neon driver a WebSocket, preferring the one the runtime already has.
+ *
+ * ── Why not just always use `ws` ──────────────────────────────────────────────
+ *
+ * Because it broke production. The `ws` package's masking is accelerated by
+ * `bufferutil`, an optional **native** addon, and on Vercel that binary was not traced
+ * into the deployed function. The failure mode is nastier than a missing module: the
+ * driver loaded, connected, and then threw `TypeError: b.mask is not a function` from
+ * a timer callback, so every job run failed with no indication that the cause was a
+ * packaging problem rather than the database.
+ *
+ * Node has had a global `WebSocket` since 22, and both the local runtime and the
+ * deployment target are 24. Using it means the serverless path carries no native
+ * addon at all. `ws` stays as the fallback for any runtime that lacks one, which is
+ * the case the polyfill was actually added for.
+ */
 function configureNeonWebSockets(): void {
   if (wsConfigured) return;
-  // Node has no global WebSocket in every supported version; the Neon driver needs
-  // one to open a session that can hold a transaction.
-  neonConfig.webSocketConstructor = ws;
+  const native = (globalThis as { WebSocket?: unknown }).WebSocket;
+  neonConfig.webSocketConstructor = (native ?? ws) as typeof ws;
   wsConfigured = true;
 }
 
