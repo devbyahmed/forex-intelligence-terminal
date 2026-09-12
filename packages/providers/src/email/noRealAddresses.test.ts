@@ -15,6 +15,7 @@
  * gitignored; everything committed uses a domain that can never be registered.
  */
 
+import { spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -42,9 +43,45 @@ const SKIP_DIRECTORIES = new Set([
   'playwright-report',
 ]);
 
-/** Every committed file worth scanning. `.env` is excluded: it is gitignored. */
+/**
+ * Files git ignores, asked of git rather than guessed.
+ *
+ * This test is about what gets **committed**, and a file git ignores cannot be. The
+ * exemption used to be hardcoded to `.env*`, which was right about that one case and
+ * wrong as a rule: the moment a second gitignored file held a real address on purpose
+ * — `CREDENTIALS.local.md`, the handoff note — the scan reported it as an offender
+ * while git was never going to publish it.
+ *
+ * Two definitions of "cannot be committed" is the duplicated-rule problem this codebase
+ * keeps finding, so there is now one, and it is git's.
+ *
+ * Fails closed: if git cannot be consulted, nothing is exempted and the scan is wider
+ * than necessary rather than narrower.
+ */
+function gitIgnored(paths: readonly string[]): ReadonlySet<string> {
+  if (paths.length === 0) return new Set();
+  try {
+    const result = spawnSync('git', ['check-ignore', '--stdin'], {
+      cwd: REPO_ROOT,
+      input: paths.join('\n'),
+      encoding: 'utf8',
+    });
+    // Exit 0 = some ignored, 1 = none ignored. Anything else means git could not answer.
+    if (result.status !== 0 && result.status !== 1) return new Set();
+    return new Set(
+      result.stdout
+        .split(/\r?\n/)
+        .filter((line) => line !== '')
+        .map((line) => join(REPO_ROOT, line)),
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+/** Every committed file worth scanning. Anything git ignores is excluded. */
 function scannedFiles(): readonly string[] {
-  const out: string[] = [];
+  const candidates: string[] = [];
   const walk = (dir: string): void => {
     let entries: string[];
     try {
@@ -54,18 +91,18 @@ function scannedFiles(): readonly string[] {
     }
     for (const entry of entries) {
       if (SKIP_DIRECTORIES.has(entry)) continue;
-      // Never read the environment file: it holds the real values on purpose.
-      if (entry.startsWith('.env')) continue;
       const full = join(dir, entry);
       if (statSync(full).isDirectory()) {
         walk(full);
         continue;
       }
-      if (SCANNED_EXTENSIONS.some((ext) => entry.endsWith(ext))) out.push(full);
+      if (SCANNED_EXTENSIONS.some((ext) => entry.endsWith(ext))) candidates.push(full);
     }
   };
   walk(REPO_ROOT);
-  return out;
+
+  const ignored = gitIgnored(candidates.map((f) => relative(REPO_ROOT, f).replace(/\\/g, '/')));
+  return candidates.filter((f) => !ignored.has(f));
 }
 
 /**
