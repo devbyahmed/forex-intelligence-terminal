@@ -35,8 +35,42 @@
   --chip-stale: #6b5f4a;
   --chip-unavailable: #4a4a4a;
 
+  /*
+   * Type scale.
+   *
+   * The page previously used a dozen ad-hoc sizes between 0.68 and 1.05rem, which is a
+   * range too narrow to establish rank — everything looked equally important, so nothing
+   * was. These six steps are separated enough to be told apart at a glance.
+   *
+   * The ceiling is deliberately low. A3 forbids a hero numeral because size reads as
+   * certainty, and certainty is measured separately and is often lower than the reading
+   * implies. So prominence on this page comes from **space and position**, not scale:
+   * the reading is the first thing on the page with the most room around it, not the
+   * biggest text on it.
+   */
+  --t-xs: 0.75rem;
+  --t-sm: 0.8125rem;
+  --t-base: 0.9375rem;
+  --t-md: 1.0625rem;
+  --t-lg: 1.1875rem;
+
+  /* Spacing scale. One rhythm, so vertical distance means something consistent. */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+
+  /*
+   * Reading measure. Unbounded prose across a 1440px viewport produces 200-character
+   * lines, which the eye loses track of between one line and the next.
+   */
+  --measure: 68ch;
+
   --radius: 4px;
-  --gap: 1rem;
+  --gap: var(--s-4);
 }
 
 * {
@@ -67,36 +101,88 @@ body {
   font-size: 0.85rem;
 }
 
+/*
+ * Two columns, not one ribbon.
+ *
+ * Rendered as a single column this page was 10,715 pixels tall, which is not a layout —
+ * it is a scroll. The split is by *kind of question*: the left column answers "what is
+ * the reading and what is it made of", the right answers "what is the machine doing".
+ * They are read at different times and for different reasons, so stacking them forces
+ * every reader through one to reach the other.
+ */
 main {
   display: grid;
   gap: var(--gap);
-  padding: var(--gap) 2rem 4rem;
-  max-width: 1100px;
+  padding: var(--s-5) var(--s-6) var(--s-7);
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1100px) {
+  main {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .col {
+    display: grid;
+    gap: var(--gap);
+    min-width: 0;
+  }
+  /* Full-bleed rows that belong to neither column. */
+  .col-full {
+    grid-column: 1 / -1;
+  }
+}
+
+.col {
+  display: grid;
+  gap: var(--gap);
+  min-width: 0;
 }
 
 .panel {
   background: var(--panel);
   border: 1px solid var(--panel-edge);
   border-radius: var(--radius);
-  padding: 1.25rem;
+  padding: var(--s-5);
 }
 
+/*
+ * A panel heading should be findable while scrolling past it. Previously it was
+ * 0.95rem/600 against 0.9rem body — a distinction the eye cannot make at speed.
+ */
 .panel-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: var(--s-4);
+  margin-bottom: var(--s-4);
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid var(--panel-edge);
 }
 .panel-head h2 {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--t-md);
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 .hint,
 .asset {
   color: var(--text-dim);
-  font-size: 0.8rem;
+  font-size: var(--t-sm);
+  text-align: right;
+}
+
+/* Prose stays readable regardless of how wide the panel gets. */
+.panel p,
+.gap-why,
+.gap-resolution,
+.factor-explanation,
+.abstain-detail,
+.limitation,
+.layer-meaning,
+.gap-meaning {
+  max-width: var(--measure);
 }
 
 /* ── Score: a marker on a fixed bidirectional axis ────────────────────────── */
@@ -139,18 +225,25 @@ main {
 .reading {
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
-}
-.reading-label {
-  font-size: 1rem;
-  font-weight: 600;
+  gap: var(--s-3);
 }
 /*
- * Body weight, not hero type. The number is the same size as the sentence next to it,
- * because size reads as certainty and certainty is reported separately.
+ * The label and the value are the SAME SIZE, and that invariant is the point.
+ *
+ * A3 bars a hero numeral because size reads as certainty, and confidence is measured
+ * separately — often lower than a large number would imply. So the two moved up one
+ * step together rather than the number moving up alone: the reading stays a sentence
+ * with a figure in it, not a figure with a caption.
+ *
+ * Its prominence comes from the space around it and from being first on the page.
  */
+.reading-label {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
 .reading-value {
-  font-size: 1rem;
+  font-size: var(--t-lg);
   font-variant-numeric: tabular-nums;
   color: var(--text-dim);
 }
@@ -204,29 +297,38 @@ main {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.85rem;
+  /* The row's own padding provides the separation; a gap on top of it doubled it. */
+  gap: 0;
 }
 .factor {
-  padding: 0.75rem 0;
+  padding: var(--s-4) 0;
   border-top: 1px solid var(--panel-edge);
+}
+.factor:first-child {
+  border-top: none;
+  padding-top: 0;
 }
 .factor-head {
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
-  font-size: 0.9rem;
+  gap: var(--s-2);
+  font-size: var(--t-base);
 }
 .factor-id {
   color: var(--text-faint);
   font-variant-numeric: tabular-nums;
+  font-size: var(--t-xs);
+  /* Fixed width so eight factor names start on the same vertical line. */
+  min-width: 1.6rem;
 }
 .factor-name {
-  font-weight: 500;
+  font-weight: 600;
 }
 .factor-weight {
   margin-left: auto;
   color: var(--text-faint);
-  font-size: 0.78rem;
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
 }
 
 .factor-body {
@@ -282,9 +384,10 @@ main {
 }
 
 .factor-explanation {
-  margin: 0.35rem 0 0;
+  margin: var(--s-2) 0 0;
   color: var(--text-dim);
-  font-size: 0.84rem;
+  font-size: var(--t-sm);
+  line-height: 1.6;
 }
 
 .freshness {
@@ -472,11 +575,29 @@ details li {
   color: var(--text-faint);
   font-size: 0.83rem;
 }
+/*
+ * Bounded like the news and calendar lists, and for the same reason.
+ *
+ * Twelve facts, twelve interpretations and the assessment rendered in full made this
+ * the tallest thing on the page — the reference material outweighing the reading it
+ * supports. Every statement stays present, countable and reachable; it simply stops
+ * setting the height of the page.
+ */
 .statements {
   margin: 0;
   padding-left: 1.1rem;
   display: grid;
-  gap: 0.7rem;
+  gap: var(--s-3);
+  max-height: 22rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.statements::-webkit-scrollbar {
+  width: 8px;
+}
+.statements::-webkit-scrollbar-thumb {
+  background: var(--panel-edge);
+  border-radius: 4px;
 }
 .statement-body {
   margin: 0 0 0.3rem;
@@ -613,12 +734,49 @@ details li {
 .news-why { color: var(--text-faint); }
 .news-empty { margin: 0; color: var(--text-dim); font-size: 0.85rem; }
 
+/*
+ * Bounded, not truncated.
+ *
+ * Forty-four headlines rendered in full made the news panel taller than everything
+ * above it combined, which inverted the page: the least load-bearing input on the
+ * dashboard occupied the most of it. A scroll region caps the *space* it claims while
+ * keeping every item present and countable — nothing is hidden, and the coverage counts
+ * above it stay honest, which a "show first 10" cut would quietly undermine.
+ */
 .news-list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 var(--s-2) 0 0;
   display: grid;
-  gap: 0.6rem;
+  gap: var(--s-3);
+  max-height: 26rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.news-list::-webkit-scrollbar,
+.table-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.news-list::-webkit-scrollbar-thumb,
+.table-scroll::-webkit-scrollbar-thumb {
+  background: var(--panel-edge);
+  border-radius: 4px;
+}
+
+/* Same treatment for the calendar, which runs to dozens of releases. */
+.table-scroll {
+  max-height: 26rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.table-scroll table {
+  margin: 0;
+}
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  z-index: 1;
 }
 .news-list li {
   padding-top: 0.55rem;

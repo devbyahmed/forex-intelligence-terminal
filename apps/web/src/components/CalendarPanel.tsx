@@ -27,8 +27,14 @@ export function CalendarPanel({ view }: { view: CalendarView }): React.ReactElem
       {view.entries.length === 0 ? (
         <p className="news-empty">No releases scheduled in this range.</p>
       ) : (
-        <table className="calendar-table">
-          <thead>
+        /*
+         * Bounded height with a sticky header: every release stays present and
+         * countable, but the table stops claiming more of the page than the reading it
+         * sits beside.
+         */
+        <div className="table-scroll">
+          <table className="calendar-table">
+            <thead>
             <tr>
               <th scope="col">When</th>
               <th scope="col">Event</th>
@@ -52,8 +58,9 @@ export function CalendarPanel({ view }: { view: CalendarView }): React.ReactElem
                 <td className="num">{entry.previous ?? '—'}</td>
               </tr>
             ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

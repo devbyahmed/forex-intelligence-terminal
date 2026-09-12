@@ -39,9 +39,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # No `version:` here on purpose. package.json already declares
+      # `packageManager: pnpm@10.34.5`, and action-setup v4 hard-fails with
+      # "Multiple versions of pnpm specified" when both are present — which is why
+      # every CI run since the first commit went red before running a single test.
+      # One declaration, in the file the repo already treats as authoritative.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:

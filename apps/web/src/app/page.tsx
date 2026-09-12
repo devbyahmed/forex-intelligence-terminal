@@ -63,21 +63,51 @@ export default async function DashboardPage() {
     );
   }
 
+  /*
+   * Two columns, split by the question each answers.
+   *
+   * The left column is the reading and what it is made of; the right is what the system
+   * itself is doing. Stacked in one column — as this was — the page ran to over ten
+   * thousand pixels, and the panels a reader consults occasionally sat between them and
+   * the panels they came for.
+   *
+   * The order *within* the left column is unchanged and still load-bearing: the gaps
+   * come above the factor detail, because what a reading excludes qualifies it, and a
+   * qualification placed below the detail is one most readers never reach.
+   */
   return (
     <>
-      <SignedInBar email={session.email} />
-      <ScorePanel analysis={analysis} />
-      <GapPanel analysis={analysis} />
-      <FactorList analysis={analysis} />
-      <LayerPanel analysis={analysis} />
-      <NewsPanel coverage={news} />
-      <CalendarPanel view={calendar} />
-      <RefreshButton quote={quote} />
-      <SystemStatusPanel status={status} />
-      <p className="report-link">
-        <a href={`/reports/${analysis.id}`}>Open the stored report for this run</a>
+      <div className="col-full">
+        <SignedInBar email={session.email} />
+      </div>
+
+      <div className="col col-primary">
+        <ScorePanel analysis={analysis} />
+        <GapPanel analysis={analysis} />
+        <FactorList analysis={analysis} />
+        <LayerPanel analysis={analysis} />
+      </div>
+
+      <div className="col col-secondary">
+        <NewsPanel coverage={news} />
+        <CalendarPanel view={calendar} />
+        <RefreshButton quote={quote} />
+        <SystemStatusPanel status={status} />
+      </div>
+
+      {/*
+        Two links, two classes. `.report-link a` matched both, so a test clicking "the
+        report link" was ambiguous and Playwright refused it outright — correctly, since
+        "this run's report" and "the archive" are different destinations.
+      */}
+      <p className="report-link col-full">
+        <a className="report-run-link" href={`/reports/${analysis.id}`}>
+          Open the stored report for this run
+        </a>
         {' · '}
-        <a href="/reports">Report archive</a>
+        <a className="report-archive-link" href="/reports">
+          Report archive
+        </a>
       </p>
     </>
   );

@@ -24,10 +24,26 @@
 
 import type { NewsCoverage } from '@forex-agent/contracts';
 
+/*
+ * ── This panel does not decide whether F8 scores ─────────────────────────────
+ *
+ * It used to. It compared `relevantCount` against the scoring thresholds and printed
+ * "so the news factor is scoring this run" — and on a live run it said exactly that
+ * while F8, on the same screen, reported no reading at all.
+ *
+ * Both numbers were right; they count different things. Relevance is "is this article
+ * about gold" (10 here). Scoring needs an article that also carries a lexicon term and
+ * comes from a source at or above the scoring tier (3 here), because the score is a mean
+ * of per-article polarity and an article with no sentiment term contributes nothing to a
+ * mean. Applying one rule's thresholds to the other rule's population produced a
+ * confident, wrong claim.
+ *
+ * So the verdict now has exactly one author — the factor — and this panel reports what
+ * was collected and what the floor is. The two counts are both shown, with the reason
+ * they differ, because a reader who sees "10" here and "3" on F8 deserves better than
+ * to be left reconciling them.
+ */
 export function NewsPanel({ coverage }: { coverage: NewsCoverage }): React.ReactElement {
-  const short = coverage.relevantCount < coverage.requiredArticles;
-  const tooFewSources = coverage.sourceCount < coverage.requiredSources;
-
   return (
     <section className="panel news-panel" aria-labelledby="news-heading">
       <header className="panel-head">
@@ -48,30 +64,30 @@ export function NewsPanel({ coverage }: { coverage: NewsCoverage }): React.React
         {coverage.sourceCount === 1 ? 'source' : 'sources'}, out of {coverage.totalCount} collected.
       </p>
 
-      {short || tooFewSources ? (
-        <div className="news-threshold">
-          <p>
-            The news factor needs at least {coverage.requiredArticles} relevant articles from{' '}
-            {coverage.requiredSources} sources before it produces a score. It has{' '}
-            {coverage.relevantCount} from {coverage.sourceCount}, so it is not scoring this run.
-          </p>
-          {/*
-            Why the floor is where it is. Without this it reads as an arbitrary number
-            that happens to block the factor.
-          */}
-          <p className="news-why">
-            The score would be a mean of per-article sentiment, and the error of a mean
-            falls as one over the square root of the count. Below ten, the figure moves
-            more with which headlines happened to land than with anything about the
-            market — so a number here would be noise presented as a measurement.
-          </p>
-        </div>
-      ) : (
-        <p className="news-threshold">
-          Above the {coverage.requiredArticles}-article and {coverage.requiredSources}-source
-          minimum, so the news factor is scoring this run.
+      {/*
+        Always rendered, whatever the counts. The floor and its justification are facts
+        about how this product measures, not an explanation that is only owed on the days
+        the factor happens to be dark.
+      */}
+      <div className="news-threshold">
+        <p>
+          The news factor needs at least {coverage.requiredArticles} relevant articles, from{' '}
+          {coverage.requiredSources} sources, before it produces a score — and it counts only
+          those carrying a sentiment term, which is a smaller set than the relevance count
+          above. Whether this run cleared that floor is stated by the F8 factor itself, with
+          the count it actually used.
         </p>
-      )}
+        {/*
+          Why the floor is where it is. Without this it reads as an arbitrary number
+          that happens to block the factor.
+        */}
+        <p className="news-why">
+          The score would be a mean of per-article sentiment, and the error of a mean
+          falls as one over the square root of the count. Below ten, the figure moves
+          more with which headlines happened to land than with anything about the
+          market — so a number here would be noise presented as a measurement.
+        </p>
+      </div>
 
       {coverage.articles.length === 0 ? (
         <p className="news-empty">

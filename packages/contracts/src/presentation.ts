@@ -236,10 +236,23 @@ const GROUP_META: Readonly<
     isDefect: false,
   },
   STRUCTURAL: {
-    heading: 'Not obtainable on current sources',
+    /*
+     * Wording matters more here than anywhere else on the page.
+     *
+     * This heading previously read "Not obtainable on current sources", which a reader
+     * took — correctly, from the words — to mean the reading was built on sources that
+     * could not be relied on. It means the opposite: a small number of *specific inputs*
+     * are published by nobody for free, while everything actually in the reading comes
+     * from FRED and primary central-bank and statistical-agency feeds.
+     *
+     * A caveat that makes the whole product look untrustworthy is worse than no caveat,
+     * because it costs the reader confidence in figures that deserve it.
+     */
+    heading: 'Inputs no free provider publishes',
     meaning:
-      'The data exists but is not reachable from the free sources this product uses. A known, ' +
-      'standing constraint rather than an outage.',
+      'Everything else in this reading is measured normally. These particular inputs are not ' +
+      'published by any free provider — a known, standing constraint on coverage, not an ' +
+      'outage, and not a judgement on the sources this reading does use.',
     isDefect: false,
   },
   CONFIGURATION: {

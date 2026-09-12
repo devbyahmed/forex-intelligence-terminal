@@ -205,7 +205,7 @@ test.describe('freshness and provenance', () => {
      * provenance with the analysis `run_at`, so every fact claimed to have been
      * published on the day the analysis ran.
      */
-    const runAtText = await page.locator('.report-link a').getAttribute('href');
+    const runAtText = await page.locator('.report-run-link').getAttribute('href');
     expect(runAtText).not.toBeNull();
 
     const details = page.locator('.factor details.provenance').first();
@@ -235,7 +235,7 @@ test.describe('the stored report', () => {
   test('opens from the dashboard and renders the same run', async ({ page }) => {
     const dashboardReading = await page.locator('.reading-value').innerText();
 
-    await page.locator('.report-link a').click();
+    await page.locator('.report-run-link').click();
     await page.waitForURL(/\/reports\//);
 
     await expect(page.locator('.report-tag')).toHaveText('Stored report');
@@ -245,7 +245,7 @@ test.describe('the stored report', () => {
   });
 
   test('says it is a snapshot before the number, not after', async ({ page }) => {
-    await page.locator('.report-link a').click();
+    await page.locator('.report-run-link').click();
     await page.waitForURL(/\/reports\//);
 
     const noteBox = await page.locator('.report-note').boundingBox();
@@ -257,7 +257,7 @@ test.describe('the stored report', () => {
   test('carries the caveat too', async ({ page }) => {
     // Every surface that renders a score renders its caveat. That is the property, and
     // it holds because the caveat travels inside the payload.
-    await page.locator('.report-link a').click();
+    await page.locator('.report-run-link').click();
     await page.waitForURL(/\/reports\//);
     await expect(page.locator('.score-panel .caveat')).toContainText(/not a forecast/i);
   });

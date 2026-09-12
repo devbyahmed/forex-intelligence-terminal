@@ -55,7 +55,24 @@ function FactorRow({ factor }: { factor: FactorView }): React.ReactElement {
         <AbstainedBody factor={factor} />
       )}
 
-      <p className="factor-explanation">{factor.explanation}</p>
+      {/*
+        Derivation detail, one interaction away — and only this.
+
+        What stays visible is everything that qualifies the number: the score, the
+        freshness chip, the lag note, and the "Partly measured" caveat. Those are
+        governed by their own rules and are never collapsed.
+
+        The explanation is the *method* — which series, what standardisation, which
+        window. It also repeats the limitation sentence verbatim, because the same
+        string feeds the evidence bundle the model reads and the stored INTERPRETATION
+        statement, where it genuinely is load-bearing. Rendered inline it produced the
+        same caveat twice in the same card, which reads as a stutter rather than as
+        emphasis.
+      */}
+      <details className="factor-explain">
+        <summary>How this was measured</summary>
+        <p className="factor-explanation">{factor.explanation}</p>
+      </details>
 
       {factor.provenance.length > 0 ? <ProvenanceExpander provenance={factor.provenance} /> : null}
     </>
@@ -131,7 +148,9 @@ function AbstainedBody({
 
 const ATTRIBUTION_LABEL: Readonly<Record<string, string>> = {
   WORLD: 'Not measured this run',
-  STRUCTURAL: 'Not obtainable on current sources',
+  // Says what is missing, not that the sources are doubtful. See GROUP_META.STRUCTURAL
+  // in contracts/presentation.ts for why this distinction is load-bearing.
+  STRUCTURAL: 'No free provider publishes this',
   CONFIGURATION: 'Configuration defect',
 };
 
