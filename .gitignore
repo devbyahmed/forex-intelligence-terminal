@@ -11,6 +11,10 @@ coverage/
 .env.*
 !.env.example
 
+# Credential notes for a human or a handoff. CLAUDE.md is the public-safe context
+# file; anything ending .local.md may contain passwords and must never be pushed.
+*.local.md
+
 # Local data
 pgdata/
 *.log
